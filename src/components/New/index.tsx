@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import crypto from "crypto-js";
 
