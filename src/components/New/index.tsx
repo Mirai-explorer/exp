@@ -1,10 +1,10 @@
 "use client"
 import React from 'react';
-import crypto from "crypto-js";
+import crypto from "crypto-es";
 
 const Barcode = () => {
-    const str = 1234637
-    const strMd5 = Math.sqrt(str)
+    const str = '1234637'
+    const strMd5 = crypto.MD5(str).toString().toLowerCase()
     console.log(strMd5)
     return(
         <div>
