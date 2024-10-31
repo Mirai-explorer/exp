@@ -1,8 +1,4 @@
-import dynamic from "next/dynamic";
-
-const New = dynamic(() => import('@/components/New'), {
-    ssr: false
-});
+import New from "@/components/New";
 
 const Page = () => {
     return(
