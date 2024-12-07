@@ -300,4 +300,6 @@ const Lyric = React.memo(({ tracks, trackIndex, trackProgress, reduce, fontSize,
     );
 })
 
+Lyric.displayName = 'Lyric';
+
 export default Lyric;
