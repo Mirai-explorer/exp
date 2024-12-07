@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState, useMemo, useCallback, useLayoutEffect} from "react";
 import styled from "styled-components";
 import {Track} from "@/components/Player/utils";
 
@@ -163,7 +163,37 @@ const FullLine =
       }
     `
 
-const Lyric = ({ tracks, trackIndex, trackProgress, reduce, fontSize, offset, layout, otherLyric, lyricMode } : {
+const parseLrc = (str: string) => {
+    const regex: RegExp = /^\[(?<time>\d{2}:\d{2}(.\d{2,})?)\](?<text>.*)/;
+    const lines: string[] | null = str.split("\n");
+    const output: lyricType[] = [];
+    const parseTime = (time: string) => {
+        const minsec = time.split(":");
+        const min = parseInt(minsec[0]) * 60;
+        const sec = parseFloat(minsec[1]);
+        return min + sec;
+    };
+    lines.forEach((line) => {
+        const match: RegExpMatchArray | null = line.match(regex);
+        if (match && match.groups) {
+            const { time, text } = match.groups;
+            output.push({
+                offset: Number(parseTime(time).toFixed(2)),
+                text: text.trim()
+            });
+        }
+    });
+    return output;
+};
+
+const syncLyric = (lyrics: lyricType[], time: number, offset: number) => {
+    const scores : number[] = lyrics.map((lyric: lyricType) => time - lyric.offset).filter(score => score >= offset);
+    if (scores.length === 0) return null;
+    const closest : number = Math.min(...scores);
+    return scores.indexOf(closest);
+};
+
+const Lyric = React.memo(({ tracks, trackIndex, trackProgress, reduce, fontSize, offset, layout, otherLyric, lyricMode } : {
     tracks: Track[],
     trackIndex: number,
     trackProgress: number,
@@ -178,58 +208,25 @@ const Lyric = ({ tracks, trackIndex, trackProgress, reduce, fontSize, offset, la
     lyricMode?: number
 }) => {
     const [number, setNumber] = useState(0);
-    const target: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
-    const eleRef = useRef<Array<HTMLDivElement | null >>([]);
-    const parseLrc = (str: string) => {
-        const regex: RegExp = /^\[(?<time>\d{2}:\d{2}(.\d{2,})?)\](?<text>.*)/;
-        const lines: string[] | null = str.split("\n");
-        const output: lyricType[] = [];
-        const parseTime = (time: string) => {
-            const minsec = time.split(":");
-            const min = parseInt(minsec[0]) * 60;
-            const sec = parseFloat(minsec[1]);
-            return min + sec;
-        };
-        lines.forEach((line) => {
-            const match: RegExpMatchArray | null = line.match(regex);
-            if (match && match.groups) {
-                const { time, text } = match.groups;
-                output.push({
-                    offset: Number(parseTime(time).toFixed(2)),
-                    text: text.trim()
-                });
-            }
-        });
-        return output;
-    };
+    const target= useRef<HTMLDivElement | null>(null);
+    const eleRef = useRef<Array<HTMLDivElement | null>>(new Array(tracks[trackIndex]?.lyric.length || 0).fill(null));
 
-    const lyric = parseLrc(tracks[trackIndex].lyric);
-
-    const syncLyric = (lyrics: lyricType[], time: number) => {
-        const scores : number[] = [];
-        lyrics.map((lyric : lyricType) => {
-            const score = time - lyric.offset;
-            if (score >= offset) {
-                scores.push(score);
-            }
-        });
-        if (scores.length === 0) return null;
-        const closest : number = Math.min(...scores);
-        return scores.indexOf(closest);
-    };
+    const lyric = useMemo(() => parseLrc(tracks[trackIndex].lyric), [tracks, trackIndex]);
 
     useEffect(() => {
-        setNumber(syncLyric(lyric, trackProgress) as number);
-    }, [trackProgress]);
+        setNumber(syncLyric(lyric, trackProgress, offset) as number);
+    }, [trackProgress, lyric, offset]);
 
     useEffect(() => {
-        target.current !== null ? target.current.style.transform = `translateY(32px)` : null;
+        target.current && (target.current.style.transform = `translateY(32px)`);
         eleRef.current[0]?.scrollIntoView({ behavior: "smooth", block: "center" })
     }, [trackIndex]);
 
-    useEffect(() => {
-        target.current !== null ? target.current.style.transform = `translateY(${-(32 * number)+32}px)` : null;
-        eleRef.current[number]?.scrollIntoView({ behavior: "smooth", block: "center" })
+    useLayoutEffect(() => {
+        if (target.current) {
+            target.current.style.transform = `translateY(${-(32 * number) + 32}px)`;
+        }
+        eleRef.current[number]?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, [number]);
 
     return (
@@ -278,7 +275,11 @@ const Lyric = ({ tracks, trackIndex, trackProgress, reduce, fontSize, offset, la
                                         }
                                         data-time={item.offset}
                                         $size={fontSize}
-                                        ref={(target => eleRef.current[index] = target) as React.LegacyRef<any>}
+                                        ref={(target) =>{
+                                            if (target) {
+                                                eleRef.current[index] = target;
+                                            }
+                                        } }
                                     >
                                         <span>{item.text}</span>
                                         <span className="other_lyric">
@@ -297,6 +298,6 @@ const Lyric = ({ tracks, trackIndex, trackProgress, reduce, fontSize, offset, la
             )}
         </LyricWrap>
     );
-}
+})
 
 export default Lyric;

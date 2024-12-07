@@ -12,9 +12,8 @@ import PlayList from "@/components/Player/PlayList";
 import Setting from "@/components/Player/Setting";
 import tracks0 from "@/assets/data/tracks";
 
-const Player = () => {
-    const MiraiPlayer =
-        styled.div.attrs((/* props */) => ({ tabIndex: 0 }))`
+const MiraiPlayer =
+    styled.div.attrs((/* props */) => ({ tabIndex: 0 }))`
       position: absolute;
       bottom: 0;
       left: 0;
@@ -61,8 +60,8 @@ const Player = () => {
         }
     `
 
-    const Layout =
-        styled.div`
+const Layout =
+    styled.div`
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -84,8 +83,8 @@ const Player = () => {
       }
     `
 
-    const Layout1 =
-        styled.div`
+const Layout1 =
+    styled.div`
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -94,16 +93,16 @@ const Player = () => {
       padding-top: 2rem;
     `
 
-    const Layout2 =
-        styled.div`
+const Layout2 =
+    styled.div`
       display: flex;
       align-items: center;
       gap: 1rem;
       width: 100%;
     `
 
-    const Layout3 =
-        styled.div`
+const Layout3 =
+    styled.div`
       display: flex;
       flex-direction: column;
       flex: 1;
@@ -112,6 +111,7 @@ const Player = () => {
       gap: 2rem;
     `
 
+const Player = () => {
     const [tracks, setTracks] = useState(tracks0);
     const [trackIndex, setTrackIndex] = useState(0);
     const [trackProgress, setTrackProgress] = useState(0);

@@ -23,8 +23,6 @@ const CoverShell =
     styled.div`
       border-radius: 50%;
       box-shadow: 0 3px 6px rgba(0,0,0,.16);
-      animation: ${rotate} 15s linear infinite;
-      animation-play-state: paused;
       
       &.thick, &.thin {
         animation: none;
